@@ -13,35 +13,21 @@ RUN yarn install
 
 FROM base AS builder
 
-RUN apk update && apk add --no-cache git
-
-ENV OPENAI_API_KEY=""
-ENV GOOGLE_API_KEY=""
-ENV CODE=""
+RUN apk update && apk add --no-cache git openssl
 
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# 生成 Prisma Client
-RUN npx prisma generate
+# 生成 Prisma Client（如果 schema 文件存在）
+RUN if [ -f prisma/schema.prisma ]; then npx prisma generate; fi
 
 RUN yarn build
 
 FROM base AS runner
 WORKDIR /app
 
-RUN apk add proxychains-ng openssl
-
-ENV PROXY_URL=""
-ENV OPENAI_API_KEY=""
-ENV GOOGLE_API_KEY=""
-ENV CODE=""
-ENV ENABLE_MCP=""
-ENV DATABASE_URL=""
-ENV JWT_SECRET=""
-ENV ENCRYPTION_KEY=""
-ENV ALLOW_REGISTER="true"
+RUN apk add --no-cache proxychains-ng openssl
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./

@@ -1,6 +1,6 @@
 version: "3.9"
 services:
-  # PostgreSQL 数据库（后台管理系统需要）
+  # PostgreSQL 数据库
   postgres:
     image: postgres:15-alpine
     container_name: nextchat-db
@@ -8,73 +8,35 @@ services:
     environment:
       POSTGRES_DB: nextchat
       POSTGRES_USER: nextchat
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-nextchat_secure_password}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-nextchat_password}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U nextchat"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  # NextChat 应用（带后台管理系统）
-  chatgpt-next-web:
-    profiles: [ "no-proxy" ]
-    container_name: chatgpt-next-web
+  # NextChat 应用
+  app:
+    container_name: nextchat-app
     image: ghcr.io/xiaoshi569/nextchat:latest
+    restart: unless-stopped
     ports:
-      - 3000:3000
+      - "3000:3000"
     environment:
-      # 原有环境变量
-      - OPENAI_API_KEY=$OPENAI_API_KEY
-      - GOOGLE_API_KEY=$GOOGLE_API_KEY
-      - CODE=$CODE
-      - BASE_URL=$BASE_URL
-      - OPENAI_ORG_ID=$OPENAI_ORG_ID
-      - HIDE_USER_API_KEY=$HIDE_USER_API_KEY
-      - DISABLE_GPT4=$DISABLE_GPT4
-      - ENABLE_BALANCE_QUERY=$ENABLE_BALANCE_QUERY
-      - DISABLE_FAST_LINK=$DISABLE_FAST_LINK
-      - OPENAI_SB=$OPENAI_SB
+      # 数据库配置（必需）
+      - DATABASE_URL=postgresql://nextchat:${DB_PASSWORD:-nextchat_password}@postgres:5432/nextchat
       
-      # 新增：后台管理系统配置
-      - DATABASE_URL=postgresql://nextchat:${DB_PASSWORD:-nextchat_secure_password}@postgres:5432/nextchat
-      - JWT_SECRET=${JWT_SECRET:-change-this-jwt-secret-in-production}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your-encryption-key-32-chars-min}
-      - ALLOW_REGISTER=${ALLOW_REGISTER:-true}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - app_data:/app/data
-
-  chatgpt-next-web-proxy:
-    profiles: [ "proxy" ]
-    container_name: chatgpt-next-web-proxy
-    image: ghcr.io/xiaoshi569/nextchat:latest
-    ports:
-      - 3000:3000
-    environment:
-      # 原有环境变量
-      - OPENAI_API_KEY=$OPENAI_API_KEY
-      - GOOGLE_API_KEY=$GOOGLE_API_KEY
-      - CODE=$CODE
-      - PROXY_URL=$PROXY_URL
-      - BASE_URL=$BASE_URL
-      - OPENAI_ORG_ID=$OPENAI_ORG_ID
-      - HIDE_USER_API_KEY=$HIDE_USER_API_KEY
-      - DISABLE_GPT4=$DISABLE_GPT4
-      - ENABLE_BALANCE_QUERY=$ENABLE_BALANCE_QUERY
-      - DISABLE_FAST_LINK=$DISABLE_FAST_LINK
-      - OPENAI_SB=$OPENAI_SB
+      # 认证配置（必需，生产环境请修改）
+      - JWT_SECRET=${JWT_SECRET:-your-jwt-secret-change-in-production}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your-32-chars-encryption-key-min}
       
-      # 新增：后台管理系统配置
-      - DATABASE_URL=postgresql://nextchat:${DB_PASSWORD:-nextchat_secure_password}@postgres:5432/nextchat
-      - JWT_SECRET=${JWT_SECRET:-change-this-jwt-secret-in-production}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-your-encryption-key-32-chars-min}
+      # 用户注册开关（true=允许注册，false=关闭注册）
       - ALLOW_REGISTER=${ALLOW_REGISTER:-true}
+      
+      # 可选：代理配置（如果需要）
+      - PROXY_URL=${PROXY_URL:-}
     depends_on:
       postgres:
         condition: service_healthy
