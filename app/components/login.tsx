@@ -30,8 +30,8 @@ export function LoginPage() {
   });
 
   // 登录处理
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     setLoading(true);
 
     try {
@@ -59,8 +59,8 @@ export function LoginPage() {
   };
 
   // 注册处理
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRegister = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     
     if (registerForm.password !== registerForm.confirmPassword) {
       showToast("两次密码输入不一致");
