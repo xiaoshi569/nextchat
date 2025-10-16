@@ -11,6 +11,8 @@ import CloseIcon from "../icons/close.svg";
 import DeleteIcon from "../icons/clear.svg";
 import AddIcon from "../icons/add.svg";
 import EyeIcon from "../icons/eye.svg";
+import { apiClient } from "../utils/api-client";
+import { useAuth } from "../contexts/AuthContext";
 
 interface User {
   id: string;
@@ -38,6 +40,7 @@ interface ApiKey {
 
 export function AdminPage() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState<"users" | "apikeys">("users");
   const [users, setUsers] = useState<User[]>([]);
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);

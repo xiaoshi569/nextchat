@@ -27,7 +27,10 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # 生成 Prisma Client（必须在构建前生成）
-RUN npx prisma generate || true
+RUN npx prisma generate 2>&1 || echo "Prisma generate skipped"
+
+# 设置构建时环境变量（避免构建时连接数据库）
+ENV SKIP_ENV_VALIDATION=1
 
 # 构建应用
 RUN yarn build

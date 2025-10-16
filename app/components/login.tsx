@@ -9,9 +9,11 @@ import Locale from "../locales";
 import BotIcon from "../icons/bot.svg";
 import { Input, PasswordInput, showToast } from "./ui-lib";
 import clsx from "clsx";
+import { useAuth } from "../contexts/AuthContext";
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const { login, register: authRegister } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   
@@ -33,29 +35,19 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(loginForm),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "登录失败");
-      }
-
-      // 保存token
-      localStorage.setItem("auth-token", data.token);
-      localStorage.setItem("user-info", JSON.stringify(data.user));
-
+      await login(loginForm.email, loginForm.password);
+      
       showToast("登录成功！");
       
-      // 根据角色跳转
-      if (data.user.role === "ADMIN") {
-        navigate(Path.Admin);
+      // 获取用户信息并跳转
+      const userInfo = localStorage.getItem("user-info");
+      if (userInfo) {
+        const user = JSON.parse(userInfo);
+        if (user.role === "ADMIN") {
+          navigate(Path.Admin);
+        } else {
+          navigate(Path.Home);
+        }
       } else {
         navigate(Path.Home);
       }
@@ -78,27 +70,11 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: registerForm.email,
-          username: registerForm.username,
-          password: registerForm.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "注册失败");
-      }
-
-      // 保存token
-      localStorage.setItem("auth-token", data.token);
-      localStorage.setItem("user-info", JSON.stringify(data.user));
+      await authRegister(
+        registerForm.email,
+        registerForm.username,
+        registerForm.password,
+      );
 
       showToast("注册成功！");
       navigate(Path.Home);

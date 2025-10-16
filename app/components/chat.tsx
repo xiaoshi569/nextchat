@@ -2167,5 +2167,10 @@ function _Chat() {
 export function Chat() {
   const chatStore = useChatStore();
   const session = chatStore.currentSession();
+  
+  // 启用自动同步到后端
+  const { useChatSync } = require("../hooks/useChatSync");
+  useChatSync();
+  
   return <_Chat key={session.id}></_Chat>;
 }

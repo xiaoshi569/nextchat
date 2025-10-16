@@ -30,6 +30,8 @@ import { type ClientApi, getClientApi } from "../client/api";
 import { useAccessStore } from "../store";
 import clsx from "clsx";
 import { initializeMcpSystem, isMcpEnabled } from "../mcp/actions";
+import { AuthProvider } from "../contexts/AuthContext";
+import { ProtectedRoute } from "./ProtectedRoute";
 
 export function Loading(props: { noLogo?: boolean }) {
   return (
@@ -194,11 +196,23 @@ function Screen() {
   const renderContent = () => {
     if (isAuth) return <AuthPage />;
     if (isLogin) return <LoginPage />;
-    if (isAdmin) return <AdminPage />;
-    if (isSd) return <Sd />;
-    if (isSdNew) return <Sd />;
+    if (isAdmin) return (
+      <ProtectedRoute requireAdmin={true}>
+        <AdminPage />
+      </ProtectedRoute>
+    );
+    if (isSd) return (
+      <ProtectedRoute>
+        <Sd />
+      </ProtectedRoute>
+    );
+    if (isSdNew) return (
+      <ProtectedRoute>
+        <Sd />
+      </ProtectedRoute>
+    );
     return (
-      <>
+      <ProtectedRoute>
         <SideBar
           className={clsx({
             [styles["sidebar-show"]]: isHome,
@@ -216,7 +230,7 @@ function Screen() {
             <Route path={Path.McpMarket} element={<McpMarketPage />} />
           </Routes>
         </WindowContent>
-      </>
+      </ProtectedRoute>
     );
   };
 
@@ -277,7 +291,9 @@ export function Home() {
   return (
     <ErrorBoundary>
       <Router>
-        <Screen />
+        <AuthProvider>
+          <Screen />
+        </AuthProvider>
       </Router>
     </ErrorBoundary>
   );
