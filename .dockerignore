@@ -1,61 +1,61 @@
-# Git
+# Git 相关
 .git
 .gitignore
 .github
 
-# Dependencies
+# 依赖目录
 node_modules
 .pnp
 .pnp.js
 
-# Testing
+# 测试
 coverage
 
-# Next.js
+# Next.js 构建产物
 .next/
 out/
 
-# Production
+# 生产构建
 build
 
-# Misc
+# 杂项
 .DS_Store
 *.pem
 
-# Debug
+# 调试日志
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Local env files
+# 本地环境变量文件
 .env*.local
 .env
 
 # Vercel
 .vercel
 
-# Typescript
+# TypeScript 构建信息
 *.tsbuildinfo
 
-# IDE
+# IDE 配置
 .vscode
 .idea
 
-# Database
+# 数据库文件
 *.db
 *.db-journal
 dev.db
 
-# Docker
+# Docker 相关
 Dockerfile*
 docker-compose*
 .dockerignore
 
-# Docs
+# 文档
 README*.md
 docs/
 LICENSE
 CODE_OF_CONDUCT.md
 
-# Scripts
+# 脚本
 scripts/
