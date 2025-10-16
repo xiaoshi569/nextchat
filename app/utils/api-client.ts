@@ -100,7 +100,9 @@ class ApiClient {
   private handleUnauthorized() {
     localStorage.removeItem("auth-token");
     localStorage.removeItem("user-info");
-    window.location.href = "/#/login";
+    if (typeof window !== "undefined") {
+      window.location.hash = "#/login";
+    }
   }
 }
 

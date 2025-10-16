@@ -1,8 +1,6 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Path } from "../constant";
 
 interface User {
   id: string;
@@ -27,7 +25,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const navigate = useNavigate();
 
   // 初始化：从 localStorage 加载认证信息
   useEffect(() => {
@@ -114,7 +111,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     localStorage.removeItem("auth-token");
     localStorage.removeItem("user-info");
-    navigate(Path.Login);
+    // 跳转由调用方处理
+    if (typeof window !== "undefined") {
+      window.location.hash = "#/login";
+    }
   };
 
   const value = {

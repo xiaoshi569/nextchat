@@ -7,7 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 
 export function useChatSync() {
   const { isAuthenticated } = useAuth();
-  const chatStore = useChatStore();
+  const sessions = useChatStore((state) => state.sessions);
   const hasLoadedFromServer = useRef(false);
   const lastSyncTime = useRef(0);
 
@@ -39,7 +39,7 @@ export function useChatSync() {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [chatStore.sessions, isAuthenticated]);
+  }, [sessions, isAuthenticated]);
 
   const loadFromServer = async () => {
     try {
@@ -48,7 +48,7 @@ export function useChatSync() {
       
       if (serverSessions.length > 0) {
         // 合并服务器数据和本地数据
-        const localSessions = chatStore.sessions;
+        const localSessions = useChatStore.getState().sessions;
         const sessionMap = new Map();
 
         // 优先使用服务器数据
@@ -80,7 +80,8 @@ export function useChatSync() {
 
   const syncToServer = async () => {
     try {
-      await chatSyncService.syncAll(chatStore.sessions);
+      const currentSessions = useChatStore.getState().sessions;
+      await chatSyncService.syncAll(currentSessions);
     } catch (error) {
       console.error("[ChatSync] Failed to sync to server:", error);
     }
