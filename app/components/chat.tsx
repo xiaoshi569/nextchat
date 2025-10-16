@@ -61,6 +61,7 @@ import {
   useChatStore,
   usePluginStore,
 } from "../store";
+import { useChatSync } from "../hooks/useChatSync";
 
 import {
   autoGrowTextArea,
@@ -2169,7 +2170,6 @@ export function Chat() {
   const session = chatStore.currentSession();
   
   // 启用自动同步到后端
-  const { useChatSync } = require("../hooks/useChatSync");
   useChatSync();
   
   return <_Chat key={session.id}></_Chat>;

@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Path } from "../constant";
-import { Loading } from "./home";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -28,7 +27,7 @@ export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRout
   }, [isAuthenticated, isLoading, user, requireAdmin, navigate]);
 
   if (isLoading) {
-    return <Loading />;
+    return <div>Loading...</div>;
   }
 
   if (!isAuthenticated) {
