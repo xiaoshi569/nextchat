@@ -49,3 +49,10 @@ masks.json
 
 # mcp config
 app/mcp/mcp_config.json
+
+# database
+*.db
+*.db-journal
+prisma/migrations/
+.env.local
+.env.production

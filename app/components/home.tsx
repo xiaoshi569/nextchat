@@ -82,6 +82,14 @@ const McpMarketPage = dynamic(
   },
 );
 
+const LoginPage = dynamic(async () => (await import("./login")).LoginPage, {
+  loading: () => <Loading noLogo />,
+});
+
+const AdminPage = dynamic(async () => (await import("./admin")).AdminPage, {
+  loading: () => <Loading noLogo />,
+});
+
 export function useSwitchTheme() {
   const config = useAppConfig();
 
@@ -163,6 +171,8 @@ function Screen() {
   const isArtifact = location.pathname.includes(Path.Artifacts);
   const isHome = location.pathname === Path.Home;
   const isAuth = location.pathname === Path.Auth;
+  const isLogin = location.pathname === Path.Login;
+  const isAdmin = location.pathname === Path.Admin;
   const isSd = location.pathname === Path.Sd;
   const isSdNew = location.pathname === Path.SdNew;
 
@@ -183,6 +193,8 @@ function Screen() {
   }
   const renderContent = () => {
     if (isAuth) return <AuthPage />;
+    if (isLogin) return <LoginPage />;
+    if (isAdmin) return <AdminPage />;
     if (isSd) return <Sd />;
     if (isSdNew) return <Sd />;
     return (

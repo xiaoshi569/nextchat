@@ -1,0 +1,142 @@
+// Prisma Schema for NextChat Backend System
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 用户角色枚举
+enum Role {
+  USER      // 普通用户
+  ADMIN     // 管理员
+}
+
+// 用户表
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  username      String   @unique
+  password      String   // bcrypt 加密后的密码
+  role          Role     @default(USER)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // 关联关系
+  sessions      ChatSession[]
+  settings      UserSettings?
+}
+
+// 用户设置表
+model UserSettings {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // 用户个性化配置（JSON格式存储）
+  config        String   @default("{}")  // 存储主题、语言等配置
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// 对话会话表
+model ChatSession {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  topic             String   @default("New Chat")
+  memoryPrompt      String   @default("")
+  lastUpdate        DateTime @default(now())
+  lastSummarizeIndex Int     @default(0)
+  clearContextIndex Int?
+  
+  // 存储 mask 配置（JSON格式）
+  maskConfig        String   @default("{}")
+  
+  // 统计信息
+  tokenCount        Int      @default(0)
+  wordCount         Int      @default(0)
+  charCount         Int      @default(0)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // 关联关系
+  messages          ChatMessage[]
+  
+  @@index([userId])
+}
+
+// 聊天消息表
+model ChatMessage {
+  id            String      @id @default(cuid())
+  sessionId     String
+  session       ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  role          String      // "user" | "assistant" | "system"
+  content       String      // 消息内容（可能是JSON格式的多模态内容）
+  model         String?     // 使用的模型
+  
+  date          String      // 消息时间字符串
+  streaming     Boolean     @default(false)
+  isError       Boolean     @default(false)
+  
+  // 工具调用和音频（JSON格式存储）
+  tools         String?     // ChatMessageTool[]
+  audioUrl      String?
+  isMcpResponse Boolean     @default(false)
+  
+  createdAt     DateTime    @default(now())
+  
+  @@index([sessionId])
+}
+
+// API密钥管理表（管理员配置）
+model ApiKey {
+  id            String   @id @default(cuid())
+  provider      String   // "openai" | "anthropic" | "google" 等
+  name          String   // 密钥名称/备注
+  apiKey        String   // 加密存储的API密钥
+  baseUrl       String?  // 自定义API地址
+  
+  isActive      Boolean  @default(true)
+  priority      Int      @default(0)  // 优先级，用于负载均衡
+  
+  // 使用统计
+  usageCount    Int      @default(0)
+  lastUsedAt    DateTime?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([provider, isActive])
+}
+
+// 系统配置表
+model SystemConfig {
+  id            String   @id @default(cuid())
+  key           String   @unique
+  value         String   // JSON格式存储配置值
+  description   String?
+  
+  updatedAt     DateTime @updatedAt
+}
+
+// 用户使用日志表（可选，用于统计）
+model UsageLog {
+  id            String   @id @default(cuid())
+  userId        String
+  provider      String
+  model         String
+  tokens        Int      @default(0)
+  
+  createdAt     DateTime @default(now())
+  
+  @@index([userId, createdAt])
+}
+

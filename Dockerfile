@@ -23,46 +23,46 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# 生成 Prisma Client
+RUN npx prisma generate
+
 RUN yarn build
 
 FROM base AS runner
 WORKDIR /app
 
-RUN apk add proxychains-ng
+RUN apk add proxychains-ng openssl
 
 ENV PROXY_URL=""
 ENV OPENAI_API_KEY=""
 ENV GOOGLE_API_KEY=""
 ENV CODE=""
 ENV ENABLE_MCP=""
+ENV DATABASE_URL=""
+ENV JWT_SECRET=""
+ENV ENCRYPTION_KEY=""
+ENV ALLOW_REGISTER="true"
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/.next/server ./.next/server
 
+# 复制 Prisma 相关文件
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/prisma ./prisma
+
+# 创建数据目录
+RUN mkdir -p /app/data && chmod 777 /app/data
+
 RUN mkdir -p /app/app/mcp && chmod 777 /app/app/mcp
 COPY --from=builder /app/app/mcp/mcp_config.default.json /app/app/mcp/mcp_config.json
 
+# 复制启动脚本
+COPY docker-entrypoint.sh /app/
+RUN chmod +x /app/docker-entrypoint.sh
+
 EXPOSE 3000
 
-CMD if [ -n "$PROXY_URL" ]; then \
-    export HOSTNAME="0.0.0.0"; \
-    protocol=$(echo $PROXY_URL | cut -d: -f1); \
-    host=$(echo $PROXY_URL | cut -d/ -f3 | cut -d: -f1); \
-    port=$(echo $PROXY_URL | cut -d: -f3); \
-    conf=/etc/proxychains.conf; \
-    echo "strict_chain" > $conf; \
-    echo "proxy_dns" >> $conf; \
-    echo "remote_dns_subnet 224" >> $conf; \
-    echo "tcp_read_time_out 15000" >> $conf; \
-    echo "tcp_connect_time_out 8000" >> $conf; \
-    echo "localnet 127.0.0.0/255.0.0.0" >> $conf; \
-    echo "localnet ::1/128" >> $conf; \
-    echo "[ProxyList]" >> $conf; \
-    echo "$protocol $host $port" >> $conf; \
-    cat /etc/proxychains.conf; \
-    proxychains -f $conf node server.js; \
-    else \
-    node server.js; \
-    fi
+CMD ["/app/docker-entrypoint.sh"]
